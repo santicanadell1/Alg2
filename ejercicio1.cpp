@@ -60,8 +60,8 @@ class Biblioteca {
                 nuevo->id = d;
                 nuevo->titulo = titulo;
                 nuevo->habilitado = true;
-                nuevo->der = nullptr;
-                nuevo->izq = nullptr;
+                nuevo->der = NULL;
+                nuevo->izq = NULL;
                 cantHab++;
                 cantTotal++;
                 return nuevo;
@@ -198,11 +198,11 @@ class Biblioteca {
 
         void eliminarAVL(){
             destruirNodo(raiz);
-            raiz = nullptr;
+            raiz = NULL;
         }
 
         Biblioteca() {
-            raiz = nullptr;
+            raiz = NULL;
             cantHab = 0;
             cantInhab = 0;
             cantTotal = 0;
@@ -210,7 +210,7 @@ class Biblioteca {
 
         ~Biblioteca() {
             destruirNodo(raiz);
-            raiz = nullptr;
+            raiz = NULL;
         }
 };
 
