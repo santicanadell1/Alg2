@@ -217,42 +217,60 @@ public:
     }
 };
 
+   #include <iostream>
+#include <string>
+using namespace std;
+
 int main() {
     int N;
-    cin >> N;
-    colaDePrioridad cola(N);
+    cin >> N;  // Número de pedidos (aunque no parece ser usado en el resto del código)
+    
     int O;
-    cin >> O;
+    cin >> O;  // Número de operaciones a realizar
+    colaDePrioridad cola(N);  // Inicializa la cola de prioridad con N
+
     for (int i = 0; i < O; i++) {
         string operacion;
         cin >> operacion;
+
         if (operacion == "I") {
             int id;
-            string items;
-            bool paraLlevar;
             int prioridad;
-            cin >> id >> prioridad >> paraLlevar >> items;
+            string paraLlevarStr;
+            string items;
+            
+            cin >> id >> prioridad >> paraLlevarStr;
+            cin.ignore();  // Ignorar el espacio antes de items
+            getline(cin, items);  // Leer items como una línea completa
+            
+            bool paraLlevar = (paraLlevarStr == "true");  // Convertir a bool
+
             cola.encolar(id, prioridad, items, paraLlevar);
+
         } else if (operacion == "E") {
             int id;
             cin >> id;
-            cola.eliminar(id);
+            cola.eliminar(id);  // Elimina el pedido con el ID especificado
+
         } else if (operacion == "C") {
             int id;
             cin >> id;
-            cola.cambiarPedido(id);
+            cola.cambiarPedido(id);  // Cambia el pedido a "para llevar"
         }
     }
-    
+
+    // Genera la salida con los pedidos restantes
     int cant = cola.cantElemEncolados();
-    for (int i = 1; i <= cant; i++) { // Cambiar i < cant a i < cant
+    for (int i = 1; i <= cant; i++) { 
         pedido* ped = cola.desencolar();
         if (ped) {
-            cout << ped->id << " " << ped->prioridad << " " << (ped->paraLlevar ? "true" : "false") << " " << ped->items << endl;
-            delete ped; 
+            cout << ped->id << " " << ped->prioridad << " " 
+                 << (ped->paraLlevar ? "true" : "false") << " " 
+                 << ped->items << endl;
+            delete ped;  // Libera la memoria asignada al pedido
         }
     }
-    
 
     return 0;
 }
+
