@@ -20,21 +20,20 @@ struct pedido {
 
 class colaDePrioridad {
 private:
-    //heap
     int capacidad;
-    int pos; // primero libre
+    int pos; // Primero libre
     pedido** vec;
-
+    
     int min(int i1, int i2) {
         return vec[i1]->prioridad < vec[i2]->prioridad ? i1 : i2;
     }
-
+    
     bool lleno() {
-        return pos > capacidad;
+        return pos >= capacidad;
     }
-
+    
     bool vacio() {
-        return pos <= 1; // Si pos es 1 o menor, el heap está vacío
+        return pos == 1; 
     }
 
     void swap(int pos1, int pos2) {
@@ -45,14 +44,14 @@ private:
         pedido* aux = vec[pos1];
         vec[pos1] = vec[pos2];
         vec[pos2] = aux;
-        actualizarHash(vec[pos1]->id, pos1);
-        actualizarHash(vec[pos2]->id, pos2);
+        insertarAux(vec[pos1]->id, pos1);
+        insertarAux(vec[pos2]->id, pos2);
     }
 
     int padre(int pos) {
         return pos / 2;
     }
-
+    
     bool comparar(int pos, int posPadre) {
         bool menor = false;
         if (vec[pos]->prioridad < vec[posPadre]->prioridad) {
@@ -66,7 +65,9 @@ private:
     }
 
     void flotar(int pos) {
-        if (pos == 1) return; // Si es la raíz, no hay que flotar
+        if (pos == 1) {
+            return;
+        }
         int posPadre = padre(pos);
         if (comparar(pos, posPadre)) {
             swap(pos, posPadre);
@@ -90,184 +91,144 @@ private:
         }
     }
 
-    //funciones auxiliares de la lista
-    void insertarLista(posicion*& lista, int id, int pos) {
-        if(!lista) {
-            posicion* nuevo = new posicion;
-            nuevo->id = id;
-            nuevo->pos = pos;
-            nuevo->sig = lista;
-            lista = nuevo;
-            cantElem++;
-        }
-        else if(lista->id == id){
-            return;
-        }
-        else{
-            insertarLista(lista->sig , id , pos);
-        }
-        
-    }
-
-    void actualizarLista(posicion*& lista, int id, int pos) {
-        if(!lista) {
-            return;
-        }
-        else if(lista->id == id){
-            lista->pos = pos;
-            return;
-        }
-        else{
-            actualizarLista(lista->sig , id , pos);
-        }
-    }
-
-    void eliminarLista(posicion*& lista, int id) {
-        if(!lista) {
-            return;
-        }
-        else if(lista->id == id){
-            posicion* aux = lista;
-            lista = lista->sig;
-            delete aux;
-            cantElem--;
-            return;
-        }
-        else{
-            eliminarLista(lista->sig , id);
-        }
-    }   
-    //tabla de hash
     posicion** hash;
     int largo;
     int cantElem;
-    
+
     int funcionHash1(int c) {
         return c % largo;
     }
-    
+
     void rehash() {
+        int tamNuevo = largo * 2;
+        posicion** nuevaTabla = new posicion*[tamNuevo]();
+        posicion* aux = NULL;
         int largoAnt = largo;
-        posicion** hashAnt = hash;
-        largo = largo * 2 + 1;
-        hash = new posicion*[largo]();
-        for(int i = 0; i < largoAnt; i++){
-            posicion* aux = hashAnt[i];
-            while(aux){
-                insertarHash(aux->id, aux->pos);
-                posicion* aux2 = aux;
+        largo = tamNuevo;
+        for (int i = 0; i < largoAnt; i++) {
+            aux = hash[i];
+            while (aux) {
+                int buck = funcionHash1(aux->id);
+                posicion* nuevo = new posicion;
+                nuevo->id = aux->id;
+                nuevo->pos = aux->pos;
+                nuevo->sig = nuevaTabla[buck];
+                nuevaTabla[buck] = nuevo;
                 aux = aux->sig;
-                delete aux2;
             }
         }
-        delete[] hashAnt;
+        for (int i = 0; i < largoAnt; i++) {
+            posicion* actual = hash[i];
+            while (actual) {
+                posicion* aux = actual->sig;
+                delete actual;
+                actual = aux;
+            }
+        }
+        delete[] hash;
+        hash = nuevaTabla;
     }
 
-    void insertarHash(int id, int pos) {
-        if(cantElem >= largo*0.7){
+    void insertarAux(int id, int pos) {
+        if (cantElem >= 0.7 * largo) {
             rehash();
         }
-        int posHash = funcionHash1(id);
-        insertarLista(hash[posHash], id, pos);
+        int indice = funcionHash1(id);
+        posicion* buck = hash[indice];
+        while (buck) {
+            if (buck->id == id) {
+                buck->pos = pos;
+                return;
+            }
+            buck = buck->sig;
+        }
+        posicion* nuevo = new posicion;
+        nuevo->id = id;
+        nuevo->pos = pos;
+        nuevo->sig = hash[indice];
+        hash[indice] = nuevo;
+        cantElem++;  // Incrementa cuando se inserta un nuevo elemento
     }
 
-    buscarHash(int id) {
-        int posHash = funcionHash1(id);
-        posicion* aux = hash[posHash];
-        while(aux){
-            if(aux->id == id){
-                return aux->pos;
-            }
-            aux = aux->sig;
+    int buscarAux(int id) {
+        int indice = funcionHash1(id);
+        posicion* buck = hash[indice];
+        while (buck) {
+            if (buck->id == id) return buck->pos;
+            buck = buck->sig;
         }
         return -1;
     }
 
-    void actualizarHash(int id, int pos) {
-        int posHash = funcionHash1(id);
-        actualizarLista(hash[posHash], id, pos);
-    }
-
-    void eliminarHash(int id) {
-        int posHash = funcionHash1(id);
-        eliminarLista(hash[posHash], id);
-    }
 public:
-    colaDePrioridad(int tam) {
-        
-        vec = new pedido*[tam + 1](); // Inicialización a null
-        capacidad = tam;
-        pos = 1; // Comenzar desde 1
+    colaDePrioridad(int n) {
+        hash = new posicion*[n]();
+        largo = n;
         cantElem = 0;
-        largo = tam;
-        hash = new posicion*[largo];
-        for (int i = 0; i < largo; i++) {
-              hash[i] = NULL;  // Asegúrate de que todas las posiciones se inicialicen en NULL
-            }           
-
+        capacidad = n;
+        pos = 1; // Primero libre
+        vec = new pedido*[capacidad + 1]();
     }
 
     ~colaDePrioridad() {
-        for (int i = 1; i < pos; i++) { // Liberar solo hasta pos
-            delete vec[i];
+        for (int i = 1; i < pos; i++) {
+            delete vec[i]; // Liberar memoria de los pedidos
         }
         delete[] vec;
-        for(int i = 0; i < largo; i++){
-            posicion* aux = hash[i];
-            while(aux){
-                posicion* aux2 = aux;
-                aux = aux->sig;
-                delete aux2;
+        for (int i = 0; i < largo; i++) {
+            posicion* actual = hash[i];
+            while (actual) {
+                posicion* aux = actual->sig;
+                delete actual;
+                actual = aux;
             }
         }
         delete[] hash;
     }
 
-    void encolar(int id, int prioridad, const string& items, bool paraLlevar) {
+    void encolar(int id, int prioridad, string items, bool llevar) {
         if (!lleno()) {
             pedido* nuevo = new pedido;
             nuevo->id = id;
             nuevo->prioridad = prioridad;
+            nuevo->paraLlevar = llevar;
             nuevo->items = items;
-            nuevo->paraLlevar = paraLlevar;
             vec[pos] = nuevo;
-            insertarHash(id, pos);
             flotar(pos);
             pos++;
+            cantElem++;
         }
     }
 
     pedido* desencolar() {
-        if (vacio()) return NULL; // Comprobar si el heap está vacío
+        if (vacio()) return NULL;
+        pedido* desencolado = vec[1];
         swap(1, pos - 1);
-        pedido* desencolado = vec[pos - 1];
-        vec[pos - 1]= NULL;
+        vec[pos - 1] = NULL;
+        pos--;
         hundir(1);
-        eliminarHash(desencolado->id);
         return desencolado;
     }
 
     void eliminar(int id) {
-        int posicion = buscarHash(id);
-        if(pos != -1){
-            pedido* desencolado = vec[posicion];
-            swap(posicion, pos - 1);
-            vec[pos - 1] = NULL;
-            pos--;
-            flotar(posicion);
-            hundir(posicion);
-            eliminarHash(id);
-            delete desencolado;
-        }
+        int posicion = buscarAux(id);
+        if (posicion == -1) return;
+        pedido* desencolado = vec[posicion];
+        swap(posicion, pos - 1);
+        vec[pos - 1] = NULL;
+        pos--;
+        cantElem--;
+        flotar(posicion);
+        hundir(posicion);
+        delete desencolado;
     }
 
     void cambiarPedido(int id) {
-        int posicion = buscarHash(id);
-        if(posicion != -1){
-            vec[posicion]->paraLlevar = !vec[posicion]->paraLlevar;
-            flotar(posicion);
-            hundir(posicion);
-        }
+        int posicion = buscarAux(id);
+        if (posicion == -1) return;
+        vec[posicion]->paraLlevar = !vec[posicion]->paraLlevar;
+        flotar(posicion);
+        hundir(posicion);
     }
 
     int cantElemEncolados() {

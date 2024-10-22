@@ -56,18 +56,18 @@ private:
         }
     }
 
-    void hundir(int pos) {
-        int izq = pos * 2;
-        int der = pos * 2 + 1;
-        int menor = pos;
-        if (izq < capacidad && vec[izq] && comparar(izq, menor)) {
+    void hundir(int pos1) {
+        int izq = pos1 * 2;
+        int der = pos1 * 2 + 1;
+        int menor = pos1;
+        if (izq < pos && vec[izq] && comparar(izq, menor)) {
             menor = izq;
         }
-        if (der < capacidad && vec[der] && comparar(der, menor)) {
+        if (der < pos && vec[der] && comparar(der, menor)) {
             menor = der;
         }
-        if (menor != pos) {
-            swap(pos, menor);
+        if (menor != pos1) {
+            swap(pos1, menor);
             hundir(menor);
         }
     }
