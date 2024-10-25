@@ -101,7 +101,7 @@ public:
     }
 
     objeto* desencolar() {
-        if (vacio()) return nullptr; // Comprobar si el heap está vacío
+        if (vacio()) return  NULL; // Comprobar si el heap está vacío
         objeto* desencolado = vec[1];
         vec[1] = vec[pos - 1]; // Mover el último elemento a la raíz
         vec[pos - 1] = nullptr; // Liberar el último

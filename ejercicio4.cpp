@@ -34,7 +34,7 @@ private:
     }
 
     bool vacio() {
-        return pos <= 1; // Si pos es 1 o menor, el heap está vacío
+        return pos == 1; 
     }
 
     void swap(int pos1, int pos2) {
@@ -42,11 +42,11 @@ private:
             std::cerr << "Swap indices out of bounds: " << pos1 << ", " << pos2 << std::endl;
             return;
         }
+        actualizarHash(vec[pos1]->id, pos2);
+        actualizarHash(vec[pos2]->id, pos1);
         pedido* aux = vec[pos1];
         vec[pos1] = vec[pos2];
         vec[pos2] = aux;
-        actualizarHash(vec[pos1]->id, pos1);
-        actualizarHash(vec[pos2]->id, pos2);
     }
 
     int padre(int pos) {
@@ -66,11 +66,14 @@ private:
     }
 
     void flotar(int pos) {
-        if (pos == 1) return; // Si es la raíz, no hay que flotar
+        if (pos == 1) return; 
         int posPadre = padre(pos);
         if (comparar(pos, posPadre)) {
             swap(pos, posPadre);
             flotar(posPadre);
+        }
+        else{
+            return;
         }
     }
 
@@ -109,6 +112,9 @@ private:
         
     }
 
+    
+
+
     void actualizarLista(posicion*& lista, int id, int pos) {
         if(!lista) {
             return;
@@ -146,32 +152,39 @@ private:
         return c % largo;
     }
     
-    void rehash() {
+void reHash()
+    {
+        int largoNuevo = (largo *2) + 1 ;
+        posicion ** nuevo = new posicion * [largoNuevo]();
         int largoAnt = largo;
-        posicion** hashAnt = hash;
-        largo = largo * 2 + 1;
-        hash = new posicion*[largo]();
-        for(int i = 0; i < largoAnt; i++){
-            posicion* aux = hashAnt[i];
-            while(aux){
-                insertarHash(aux->id, aux->pos);
-                posicion* aux2 = aux;
+        largo = largoNuevo;
+        for (int i = 0; i < largoAnt ; i++)
+        {
+            posicion * aux = hash[i];
+            while (aux)
+            {
+                int pos = funcionHash1(aux->id);
+                insertarLista(nuevo[pos],aux->id, aux->pos);
+                posicion * temp = aux;
                 aux = aux->sig;
-                delete aux2;
+                delete temp;
             }
         }
-        delete[] hashAnt;
+        delete[] this->hash;
+        this->hash = nuevo;
     }
 
     void insertarHash(int id, int pos) {
         if(cantElem >= largo*0.7){
-            rehash();
+            cout << "Rehashing" << endl;
+            reHash();
+
         }
         int posHash = funcionHash1(id);
         insertarLista(hash[posHash], id, pos);
     }
 
-    buscarHash(int id) {
+    int buscarHash(int id) {
         int posHash = funcionHash1(id);
         posicion* aux = hash[posHash];
         while(aux){
@@ -300,19 +313,26 @@ int main() {
             bool paraLlevar = (paraLlevarStr == "true");
 
             cola.encolar(id, prioridad, items, paraLlevar);
+            cout<< "encolado" << endl;
 
         } else if (operacion == "E") {
             int id;
             cin >> id;
             cola.eliminar(id);  // Eliminar pedido por ID
+            cout<< "eliminado" << endl;
 
         } else if (operacion == "C") {
             int id;
             cin >> id;
             cola.cambiarPedido(id);  // Cambiar estado para llevar del pedido
+            cout<< "cambiado" << endl;
         }
     }
 
-    cout << cola.cantElemEncolados() << endl;  // Imprime la cantidad de pedidos encolados
+    while(cola.cantElemEncolados() > 0) {
+        pedido* p = cola.desencolar();
+        cout << p->id << " " << p->prioridad << " " << (p->paraLlevar ? "true" : "false") << " " << p->items << endl;
+        delete p;
+    }
     return 0;
 }
